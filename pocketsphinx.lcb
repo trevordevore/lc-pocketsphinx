@@ -1,0 +1,41 @@
+library community.livecode.trevordevore.pocketsphinx
+
+  use com.livecode.engine
+  use com.livecode.foreign
+
+  metadata title is "pocketsphinx"
+  metadata author is "Trevor DeVore"
+  metadata version is "0.0.1"
+
+  public type ps_decoder_t is Pointer
+  public type cmd_ln_t is Pointer
+  public type arg_t is Pointer
+
+  private foreign handler cmd_ln_init (in pCmdLnT as optional cmd_ln_t, in pArgsArray as arg_t, in pIsStrict as CBool, \
+        in pHmmKey as ZStringNative, in pHmmValue as ZStringNative, in pLmKey as ZStringNative, in pLmValue as ZStringNative, \
+        in pDictKey as ZStringNative, in pDictValue as ZStringNative, in pTerminatingNULL as optional Pointer) \
+        returns cmd_ln_t \
+        binds to "c:sphinxbase>cmd_ln_init"
+
+  private foreign handler cmd_ln_free_r (in pConfig as cmd_ln_t) \
+        returns nothing \
+        binds to "c:sphinxbase>cmd_ln_free_r"
+
+  private foreign handler ps_args () \
+        returns optional arg_t \
+        binds to "c:pocketsphinx>ps_args"
+
+
+  public handler pocketsphinxProcessFile(in pFilename as String, in pHMM as String, in pLM as String, in pDict as String) returns nothing
+    variable tConfig as optional cmd_ln_t
+
+    unsafe
+      put cmd_ln_init(nothing, ps_args(), true, "-hmm", pHMM, "-lm", pLM, "-dict", pDict, nothing) into tConfig
+      log ["tConfig", tConfig]
+      if tConfig is not nothing then
+        cmd_ln_free_r(tConfig)
+      end if
+    end unsafe
+
+  end handler
+end library
