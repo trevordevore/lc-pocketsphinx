@@ -8,48 +8,51 @@ library community.livecode.trevordevore.pocketsphinx
   metadata author is "Trevor DeVore"
   metadata version is "0.0.1"
 
-  -- public type ps_decoder_t is Pointer
-  -- public type cmd_ln_t is Pointer
-  -- public type arg_t is Pointer
+  public type ps_decoder_t is Pointer
+  public type cmd_ln_t is Pointer
+  public type arg_t is Pointer
   public type size_t is CUInt
   public type ps_result is CInt
 
+  foreign handler MCStringCreateWithCString(in pString as Pointer, out rString as String) returns CBool binds to "<builtin>"
+  foreign handler MCDataGetBytePtr(in pData as Data) returns Pointer binds to "<builtin>"
+
   // cmd_ln_t *cmd_ln_init(cmd_ln_t *inout_cmdln, arg_t const *defn, int32 strict, ...);
-  foreign handler cmd_ln_init (in pCmdLine as optional Pointer, in pArgsArray as optional Pointer, in pIsStrict as CBool, \
+  foreign handler cmd_ln_init (in pCmdLine as optional cmd_ln_t, in pArgsArray as optional arg_t, in pIsStrict as CBool, \
         in pHmmKey as ZStringNative, in pHmmValue as ZStringNative, \
         in pLmKey as ZStringNative, in pLmValue as ZStringNative, \
         in pDictKey as ZStringNative, in pDictValue as ZStringNative, \
         in pTerminator as optional ZStringNative) \
-        returns optional Pointer \
+        returns optional cmd_ln_t \
         binds to "c:sphinxbase>cmd_ln_init"
 
   // int cmd_ln_free_r(cmd_ln_t *cmdln);
-  foreign handler cmd_ln_free_r (in pConfig as Pointer) \
+  foreign handler cmd_ln_free_r (in pConfig as cmd_ln_t) \
         returns ps_result \
         binds to "c:sphinxbase>cmd_ln_free_r"
 
   // arg_t const *ps_args(void);
   foreign handler ps_args () \
-        returns optional Pointer \
+        returns optional arg_t \
         binds to "c:pocketsphinx>ps_args"
 
   // ps_decoder_t *ps_init(cmd_ln_t *config);
-  foreign handler ps_init (in pConfig as Pointer) \
-        returns optional Pointer \
+  foreign handler ps_init (in pConfig as cmd_ln_t) \
+        returns optional ps_decoder_t \
         binds to "c:pocketsphinx>ps_init"
 
   // int ps_free(ps_decoder_t *ps);
-  foreign handler ps_free (in pPsDecoder as Pointer) \
+  foreign handler ps_free (in pPsDecoder as ps_decoder_t) \
         returns ps_result \
         binds to "c:pocketsphinx>ps_free"
 
   // int ps_start_utt(ps_decoder_t *ps);
-  foreign handler ps_start_utt (in pPsDecoder as Pointer) \
+  foreign handler ps_start_utt (in pPsDecoder as ps_decoder_t) \
         returns ps_result \
         binds to "c:pocketsphinx>ps_start_utt"
 
   // int ps_end_utt(ps_decoder_t *ps);
-  foreign handler ps_end_utt (in pPsDecoder as Pointer) \
+  foreign handler ps_end_utt (in pPsDecoder as ps_decoder_t) \
         returns ps_result \
         binds to "c:pocketsphinx>ps_end_utt"
 
@@ -60,18 +63,22 @@ library community.livecode.trevordevore.pocketsphinx
                    int no_search,
                    int full_utt);
   */
-  foreign handler ps_process_raw (in pPsDecoder as Pointer, in pData as Pointer, in pNumSamples as size_t, in pNoSearch as CBool, in pFullUtt as CBool) \
+  foreign handler ps_process_raw (in pPsDecoder as ps_decoder_t, in pData as Pointer, in pNumSamples as size_t, in pNoSearch as CBool, in pFullUtt as CBool) \
         returns ps_result \
         binds to "c:pocketsphinx>ps_process_raw"
 
   // char const *ps_get_hyp(ps_decoder_t *ps, int32 *out_best_score);
-  foreign handler ps_get_hyp (in pPsDecoder as Pointer, out pBestScore as CInt) \
-        returns ZStringNative \
+  foreign handler ps_get_hyp (in pPsDecoder as ps_decoder_t, out pBestScore as CInt) \
+        returns optional Pointer \
         binds to "c:pocketsphinx>ps_get_hyp"
 
+  /**
+  Summary: Reads in a raw data file and returns the hypothesis.
 
-  public handler pocketsphinxProcessFile(in pFilename as String) returns String
-    variable tArgs as Pointer
+  Returns: String
+  */
+  public handler pocketsphinxProcessFile(in pFilename as String, out rScore as Integer) returns String
+    variable tArgs as arg_t
 
     variable tHmmKey as ZStringNative
     variable tHmmValue as ZStringNative
@@ -84,10 +91,12 @@ library community.livecode.trevordevore.pocketsphinx
     variable tConfig as optional Pointer
     variable tPSDecoder as optional Pointer
     variable tBuffer as Data
-    variable tRv as Boolean
+    variable tBufferPointer as Pointer
+    variable tRv as Integer
     variable tNumSamples as Integer
-    variable tHyp as String
-    variable tScore as Integer
+    variable tHypPtr as optional Pointer
+    variable tHypData as Data
+    variable tHypothesis as String
 
     put "-hmm" into tHmmKey
     put my resources folder & "/model/en-us/en-us" into tHmmValue
@@ -95,7 +104,6 @@ library community.livecode.trevordevore.pocketsphinx
     put my resources folder & "/model/en-us/en-us.lm.bin" into tLmValue
     put "-dict" into tDictKey
     put my resources folder & "/model/en-us/cmudict-en-us.dict" into tDictValue
-    put nothing into tTerminator
 
     unsafe
       put ps_args() into tArgs
@@ -107,21 +115,26 @@ library community.livecode.trevordevore.pocketsphinx
             tTerminator) into tConfig
 
       if tConfig is not nothing then
-        // CRASH!
         put ps_init(tConfig) into tPSDecoder
-        log tPSDecoder
       end if
 
-      -- if tPSDecoder is not nothing then
-      --   put the contents of file pFilename into tBuffer
-      -- end if
+      if tPSDecoder is not nothing then
+        put the contents of file pFilename into tBuffer
+        put the number of bytes in tBuffer / 2 into tNumSamples
+        put MCDataGetBytePtr(tBuffer) into tBufferPointer
+      end if
 
-      -- if the number of bytes in tBuffer > 0 then
-      --   put ps_start_utt(tPSDecoder) into tRv
-      --   put ps_process_raw(tPSDecoder, tBuffer, tNumSamples, false, false) into tRv
-      --   put ps_end_utt(tPSDecoder) into tRv
-      --   put ps_get_hyp(tPSDecoder, tScore) into tHyp
-      -- end if
+      if the number of bytes in tBuffer > 0 then
+        put ps_start_utt(tPSDecoder) into tRv
+        put ps_process_raw(tPSDecoder, tBufferPointer, tNumSamples, false, false) into tRv
+        put ps_end_utt(tPSDecoder) into tRv
+        put ps_get_hyp(tPSDecoder, rScore) into tHypPtr
+        if tHypPtr is not nothing then
+          if not MCStringCreateWithCString(tHypPtr, tHypothesis) then
+            log "failed to convert const char * to String"
+          end if
+        end if
+      end if
 
       if tPSDecoder is not nothing then
         ps_free(tPSDecoder)
@@ -132,7 +145,7 @@ library community.livecode.trevordevore.pocketsphinx
       end if
     end unsafe
 
-    return tHyp
+    return tHypothesis
   end handler
 
 end library
