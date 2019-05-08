@@ -30,7 +30,7 @@ library community.livecode.trevordevore.pocketsphinx
         binds to "c:pocketsphinx>ps_args"
 
   private foreign handler ps_init (in pConfig as Pointer) \
-        returns Pointer \
+        returns optional Pointer \
         binds to "c:pocketsphinx>ps_init"
 
   private foreign handler ps_free (in pPsDecoder as Pointer) \
