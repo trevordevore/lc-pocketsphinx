@@ -18,11 +18,7 @@ library community.livecode.trevordevore.pocketsphinx
   foreign handler MCDataGetBytePtr(in pData as Data) returns Pointer binds to "<builtin>"
 
   // cmd_ln_t *cmd_ln_init(cmd_ln_t *inout_cmdln, arg_t const *defn, int32 strict, ...);
-  foreign handler cmd_ln_init (in pCmdLine as optional cmd_ln_t, in pArgsArray as optional arg_t, in pIsStrict as CBool, \
-        in pHmmKey as ZStringNative, in pHmmValue as ZStringNative, \
-        in pLmKey as ZStringNative, in pLmValue as ZStringNative, \
-        in pDictKey as ZStringNative, in pDictValue as ZStringNative, \
-        in pTerminator as optional ZStringNative) \
+  foreign handler cmd_ln_init (in pCmdLine as optional cmd_ln_t, in pArgsArray as optional arg_t, in pIsStrict as CBool, ...) \
         returns optional cmd_ln_t \
         binds to "c:sphinxbase>cmd_ln_init"
 
