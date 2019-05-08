@@ -82,7 +82,7 @@ library community.livecode.trevordevore.pocketsphinx
     variable tLmValue as ZStringNative
     variable tDictKey as ZStringNative
     variable tDictValue as ZStringNative
-    variable tTerminator as optional ZStringNative
+    variable tTerminator as optional Pointer
 
     variable tConfig as optional Pointer
     variable tPSDecoder as optional Pointer
