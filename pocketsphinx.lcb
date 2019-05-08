@@ -12,6 +12,7 @@ library community.livecode.trevordevore.pocketsphinx
   -- public type cmd_ln_t is Pointer
   -- public type arg_t is Pointer
   public type size_t is CUInt
+  public type ps_result is CInt
 
   private foreign handler cmd_ln_init (in pCmdLine as optional Pointer, in pArgsArray as optional Pointer, in pIsStrict as CBool, \
         in pHmmKey as ZStringNative, in pHmmValue as ZStringNative, \
@@ -22,7 +23,7 @@ library community.livecode.trevordevore.pocketsphinx
         binds to "c:sphinxbase>cmd_ln_init"
 
   private foreign handler cmd_ln_free_r (in pConfig as Pointer) \
-        returns CBool \
+        returns ps_result \
         binds to "c:sphinxbase>cmd_ln_free_r"
 
   private foreign handler ps_args () \
@@ -34,19 +35,19 @@ library community.livecode.trevordevore.pocketsphinx
         binds to "c:pocketsphinx>ps_init"
 
   private foreign handler ps_free (in pPsDecoder as Pointer) \
-        returns CBool \
+        returns ps_result \
         binds to "c:pocketsphinx>ps_free"
 
   private foreign handler ps_start_utt (in pPsDecoder as Pointer) \
-        returns CBool \
+        returns ps_result \
         binds to "c:pocketsphinx>ps_start_utt"
 
   private foreign handler ps_end_utt (in pPsDecoder as Pointer) \
-        returns CBool \
+        returns ps_result \
         binds to "c:pocketsphinx>ps_end_utt"
 
   private foreign handler ps_process_raw (in pPsDecoder as Pointer, in pData as Pointer, in pNumSamples as size_t, in pNoSearch as CBool, in pFullUtt as CBool) \
-        returns CBool \
+        returns ps_result \
         binds to "c:pocketsphinx>ps_process_raw"
 
   private foreign handler ps_get_hyp (in pPsDecoder as Pointer, out pBestScore as CInt) \
