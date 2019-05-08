@@ -2,40 +2,121 @@ library community.livecode.trevordevore.pocketsphinx
 
   use com.livecode.engine
   use com.livecode.foreign
+  use com.livecode.file
 
   metadata title is "pocketsphinx"
   metadata author is "Trevor DeVore"
   metadata version is "0.0.1"
 
-  public type ps_decoder_t is Pointer
-  public type cmd_ln_t is Pointer
-  public type arg_t is Pointer
+  -- public type ps_decoder_t is Pointer
+  -- public type cmd_ln_t is Pointer
+  -- public type arg_t is Pointer
+  public type size_t is CUInt
 
-  private foreign handler cmd_ln_init (in pCmdLnT as optional cmd_ln_t, in pArgsArray as arg_t, in pIsStrict as CBool, \
-        in pHmmKey as ZStringNative, in pHmmValue as ZStringNative, in pLmKey as ZStringNative, in pLmValue as ZStringNative, \
-        in pDictKey as ZStringNative, in pDictValue as ZStringNative, in pTerminatingNULL as optional Pointer) \
-        returns cmd_ln_t \
+  private foreign handler cmd_ln_init (in pCmdLine as optional Pointer, in pArgsArray as optional Pointer, in pIsStrict as CBool, \
+        in pHmmKey as ZStringNative, in pHmmValue as ZStringNative, \
+        in pLmKey as ZStringNative, in pLmValue as ZStringNative, \
+        in pDictKey as ZStringNative, in pDictValue as ZStringNative, \
+        in pTerminator as optional ZStringNative) \
+        returns optional Pointer \
         binds to "c:sphinxbase>cmd_ln_init"
 
-  private foreign handler cmd_ln_free_r (in pConfig as cmd_ln_t) \
-        returns nothing \
+  private foreign handler cmd_ln_free_r (in pConfig as Pointer) \
+        returns CBool \
         binds to "c:sphinxbase>cmd_ln_free_r"
 
   private foreign handler ps_args () \
-        returns optional arg_t \
+        returns optional Pointer \
         binds to "c:pocketsphinx>ps_args"
 
+  private foreign handler ps_init (in pConfig as Pointer) \
+        returns Pointer \
+        binds to "c:pocketsphinx>ps_init"
 
-  public handler pocketsphinxProcessFile(in pFilename as String, in pHMM as String, in pLM as String, in pDict as String) returns nothing
-    variable tConfig as optional cmd_ln_t
+  private foreign handler ps_free (in pPsDecoder as Pointer) \
+        returns CBool \
+        binds to "c:pocketsphinx>ps_free"
+
+  private foreign handler ps_start_utt (in pPsDecoder as Pointer) \
+        returns CBool \
+        binds to "c:pocketsphinx>ps_start_utt"
+
+  private foreign handler ps_end_utt (in pPsDecoder as Pointer) \
+        returns CBool \
+        binds to "c:pocketsphinx>ps_end_utt"
+
+  private foreign handler ps_process_raw (in pPsDecoder as Pointer, in pData as Pointer, in pNumSamples as size_t, in pNoSearch as CBool, in pFullUtt as CBool) \
+        returns CBool \
+        binds to "c:pocketsphinx>ps_process_raw"
+
+  private foreign handler ps_get_hyp (in pPsDecoder as Pointer, out pBestScore as CInt) \
+        returns ZStringNative \
+        binds to "c:pocketsphinx>ps_get_hyp"
+
+
+  public handler pocketsphinxProcessFile(in pFilename as String) returns String
+    variable tArgs as Pointer
+
+    variable tHmmKey as ZStringNative
+    variable tHmmValue as ZStringNative
+    variable tLmKey as ZStringNative
+    variable tLmValue as ZStringNative
+    variable tDictKey as ZStringNative
+    variable tDictValue as ZStringNative
+    variable tTerminator as optional ZStringNative
+
+    variable tConfig as optional Pointer
+    variable tPSDecoder as optional Pointer
+    variable tBuffer as Data
+    variable tRv as Boolean
+    variable tNumSamples as Integer
+    variable tHyp as String
+    variable tScore as Integer
+
+    put "-hmm" into tHmmKey
+    put my resources folder & "/model/en-us/en-us" into tHmmValue
+    put "-lm" into tLmKey
+    put my resources folder & "/model/en-us/en-us.lm.bin" into tLmValue
+    put "-dict" into tDictKey
+    put my resources folder & "/model/en-us/cmudict-en-us.dict" into tDictValue
+    put nothing into tTerminator
 
     unsafe
-      put cmd_ln_init(nothing, ps_args(), true, "-hmm", pHMM, "-lm", pLM, "-dict", pDict, nothing) into tConfig
-      log ["tConfig", tConfig]
+      put ps_args() into tArgs
+
+      put cmd_ln_init(nothing, tArgs, true, \
+            tHmmKey, tHmmValue, \
+            tLmKey, tLmValue, \
+            tDictKey, tDictValue,\
+            tTerminator) into tConfig
+
+      if tConfig is not nothing then
+        // CRASH!
+        put ps_init(tConfig) into tPSDecoder
+        log tPSDecoder
+      end if
+
+      -- if tPSDecoder is not nothing then
+      --   put the contents of file pFilename into tBuffer
+      -- end if
+
+      -- if the number of bytes in tBuffer > 0 then
+      --   put ps_start_utt(tPSDecoder) into tRv
+      --   put ps_process_raw(tPSDecoder, tBuffer, tNumSamples, false, false) into tRv
+      --   put ps_end_utt(tPSDecoder) into tRv
+      --   put ps_get_hyp(tPSDecoder, tScore) into tHyp
+      -- end if
+
+      if tPSDecoder is not nothing then
+        ps_free(tPSDecoder)
+      end if
+
       if tConfig is not nothing then
         cmd_ln_free_r(tConfig)
       end if
     end unsafe
 
+    return tHyp
   end handler
+
 end library
