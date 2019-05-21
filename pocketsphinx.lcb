@@ -8,9 +8,9 @@ library community.livecode.trevordevore.pocketsphinx
   metadata author is "Trevor DeVore"
   metadata version is "0.0.1"
 
-  public type ps_decoder_t is Pointer
-  public type cmd_ln_t is Pointer
-  public type arg_t is Pointer
+  public type ps_decoder_t_ptr is Pointer
+  public type cmd_ln_t_ptr is Pointer
+  public type arg_t_ptr is Pointer
   public type size_t is CUInt
   public type ps_result is CInt
 
@@ -18,37 +18,37 @@ library community.livecode.trevordevore.pocketsphinx
   foreign handler MCDataGetBytePtr(in pData as Data) returns Pointer binds to "<builtin>"
 
   // cmd_ln_t *cmd_ln_init(cmd_ln_t *inout_cmdln, arg_t const *defn, int32 strict, ...);
-  foreign handler cmd_ln_init (in pCmdLine as optional cmd_ln_t, in pArgsArray as optional arg_t, in pIsStrict as CBool, ...) \
-        returns optional cmd_ln_t \
+  foreign handler cmd_ln_init (in pCmdLine as optional cmd_ln_t_ptr, in pArgsArray as optional arg_t_ptr, in pIsStrict as CBool, ...) \
+        returns optional cmd_ln_t_ptr \
         binds to "c:sphinxbase>cmd_ln_init"
 
   // int cmd_ln_free_r(cmd_ln_t *cmdln);
-  foreign handler cmd_ln_free_r (in pConfig as cmd_ln_t) \
+  foreign handler cmd_ln_free_r (in pConfig as cmd_ln_t_ptr) \
         returns ps_result \
         binds to "c:sphinxbase>cmd_ln_free_r"
 
   // arg_t const *ps_args(void);
   foreign handler ps_args () \
-        returns optional arg_t \
+        returns optional arg_t_ptr \
         binds to "c:pocketsphinx>ps_args"
 
   // ps_decoder_t *ps_init(cmd_ln_t *config);
-  foreign handler ps_init (in pConfig as cmd_ln_t) \
-        returns optional ps_decoder_t \
+  foreign handler ps_init (in pConfig as cmd_ln_t_ptr) \
+        returns optional ps_decoder_t_ptr \
         binds to "c:pocketsphinx>ps_init"
 
   // int ps_free(ps_decoder_t *ps);
-  foreign handler ps_free (in pPsDecoder as ps_decoder_t) \
+  foreign handler ps_free (in pPsDecoder as ps_decoder_t_ptr) \
         returns ps_result \
         binds to "c:pocketsphinx>ps_free"
 
   // int ps_start_utt(ps_decoder_t *ps);
-  foreign handler ps_start_utt (in pPsDecoder as ps_decoder_t) \
+  foreign handler ps_start_utt (in pPsDecoder as ps_decoder_t_ptr) \
         returns ps_result \
         binds to "c:pocketsphinx>ps_start_utt"
 
   // int ps_end_utt(ps_decoder_t *ps);
-  foreign handler ps_end_utt (in pPsDecoder as ps_decoder_t) \
+  foreign handler ps_end_utt (in pPsDecoder as ps_decoder_t_ptr) \
         returns ps_result \
         binds to "c:pocketsphinx>ps_end_utt"
 
@@ -59,12 +59,12 @@ library community.livecode.trevordevore.pocketsphinx
                    int no_search,
                    int full_utt);
   */
-  foreign handler ps_process_raw (in pPsDecoder as ps_decoder_t, in pData as Pointer, in pNumSamples as size_t, in pNoSearch as CBool, in pFullUtt as CBool) \
+  foreign handler ps_process_raw (in pPsDecoder as ps_decoder_t_ptr, in pData as Pointer, in pNumSamples as size_t, in pNoSearch as CBool, in pFullUtt as CBool) \
         returns ps_result \
         binds to "c:pocketsphinx>ps_process_raw"
 
   // char const *ps_get_hyp(ps_decoder_t *ps, int32 *out_best_score);
-  foreign handler ps_get_hyp (in pPsDecoder as ps_decoder_t, out pBestScore as CInt) \
+  foreign handler ps_get_hyp (in pPsDecoder as ps_decoder_t_ptr, out pBestScore as CInt) \
         returns optional Pointer \
         binds to "c:pocketsphinx>ps_get_hyp"
 
@@ -77,7 +77,7 @@ library community.livecode.trevordevore.pocketsphinx
   Returns: String
   */
   public handler pocketsphinxProcessFile(in pFilename as String, in pLogFilename as String, out rScore as Integer) returns String
-    variable tArgs as arg_t
+    variable tArgs as arg_t_ptr
 
     variable tLogKey as ZStringNative
     variable tLogValue as ZStringNative
@@ -89,8 +89,8 @@ library community.livecode.trevordevore.pocketsphinx
     variable tDictValue as ZStringNative
     variable tTerminator as optional Pointer
 
-    variable tConfig as optional cmd_ln_t
-    variable tPSDecoder as optional ps_decoder_t
+    variable tConfig as optional cmd_ln_t_ptr
+    variable tPSDecoder as optional ps_decoder_t_ptr
     variable tBuffer as Data
     variable tBufferPointer as Pointer
     variable tRv as Integer
