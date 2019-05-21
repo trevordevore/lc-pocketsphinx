@@ -69,13 +69,18 @@ library community.livecode.trevordevore.pocketsphinx
         binds to "c:pocketsphinx>ps_get_hyp"
 
   /**
-  Summary: Reads in a raw data file and returns the hypothesis.
+  Summary: Reads in an audio file and returns the hypothesis.
+
+  Description:
+  File must be single-channel (monaural), little-endian, unheadered 16-bit signed PCM audio file sampled at 16000 Hz.
 
   Returns: String
   */
-  public handler pocketsphinxProcessFile(in pFilename as String, out rScore as Integer) returns String
+  public handler pocketsphinxProcessFile(in pFilename as String, in pLogFilename as String, out rScore as Integer) returns String
     variable tArgs as arg_t
 
+    variable tLogKey as ZStringNative
+    variable tLogValue as ZStringNative
     variable tHmmKey as ZStringNative
     variable tHmmValue as ZStringNative
     variable tLmKey as ZStringNative
@@ -100,6 +105,8 @@ library community.livecode.trevordevore.pocketsphinx
     put my resources folder & "/model/en-us/en-us.lm.bin" into tLmValue
     put "-dict" into tDictKey
     put my resources folder & "/model/en-us/cmudict-en-us.dict" into tDictValue
+    put "-logfn" into tLogKey
+    put pLogFilename into tLogValue
 
     unsafe
       put ps_args() into tArgs
@@ -108,6 +115,7 @@ library community.livecode.trevordevore.pocketsphinx
             tHmmKey, tHmmValue, \
             tLmKey, tLmValue, \
             tDictKey, tDictValue,\
+            tLogKey, tLogValue, \
             tTerminator) into tConfig
 
       if tConfig is not nothing then
