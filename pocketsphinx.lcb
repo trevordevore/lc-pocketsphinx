@@ -89,8 +89,8 @@ library community.livecode.trevordevore.pocketsphinx
     variable tDictValue as ZStringNative
     variable tTerminator as optional Pointer
 
-    variable tConfig as optional Pointer
-    variable tPSDecoder as optional Pointer
+    variable tConfig as optional cmd_ln_t
+    variable tPSDecoder as optional ps_decoder_t
     variable tBuffer as Data
     variable tBufferPointer as Pointer
     variable tRv as Integer
