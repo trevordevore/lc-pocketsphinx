@@ -1,5 +1,6 @@
 # lc-pocketsphinx
-LiveCode Builder wrapper around PocketSphinx
+
+A LiveCode Builder wrapper around PocketSphinx. This project was created for the LiveCode Builder Foreign Function Interface Workshop at the LiveCode 2019 conference in San Jose, California. 
 
 Basic usage tutorial:
 
@@ -10,9 +11,21 @@ Github:
 - https://github.com/cmusphinx/sphinxbase/
 - https://github.com/cmusphinx/pocketsphinx/
 
-## Troubleshooting tip
+## Testing
 
-`-logfn` command line param specifies path to log file. Set in order to get detailed output about what is going on.
+To test this project in LiveCode:
+
+1. Open the Extension Builder from the Tools menu.
+2. Load the pocketsphinx.lcb file and load it into the IDE. This article shows where the button is for testing an LCB file: http://lessons.livecode.com/m/4071/l/1035188-how-to-use-the-extension-builder
+3. Open the pocketsphinx_test.livecode stack in the IDE.
+4. Click the **Test** button. This will analyze the *goforward.raw* audio file included in the repo. You should hypothesis of the speech to text analysis appear in the log field.
+5. If you have your own audio file to analyze click the **Select File...** button to select the file.
+
+## Supported Audio Files
+
+Audio files must be single-channel (monaural), little-endian, unheadered 16-bit signed PCM audio file sampled at 16000 Hz. You can record this files using Audacity:
+
+https://www.audacityteam.org
 
 ## Building on macOS
 
